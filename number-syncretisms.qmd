@@ -1,0 +1,129 @@
+---
+title: "Report: Number Syncretisms"
+author:
+  - name: Hannah Jane Middleton
+    attributes:
+        corresponding: true
+    affiliations:
+      - id: qmul
+        name: Queen Mary University of London
+        city: London
+  - name: Swarnendu Moitra
+    affiliations:
+      - ref: qmul
+  - name: Rémy Lamarque
+    affiliations:
+      - ref: qmul
+format: 
+  html:
+    self-contained: true
+    anchor-sections: true
+    code-fold: true
+    toc: true
+    number-sections : true
+#  pdf
+editor: visual
+execute: 
+  echo: false
+  warning: false
+---
+
+```{r}
+#| include: false
+require(tidyverse)
+require(lme4)
+require(glmm)
+require(trimr)
+require(car)
+require(lattice)
+require(itsadug)
+require(ggpubr)
+require(effects)
+require(sjPlot)
+require(effectsize)
+require(trimr)
+require(palmerpenguins)
+require(taylor)
+require(plotrix)
+require(optimx)
+```
+
+# Introduction
+
+## Procedure
+
+Participants are taught an artificial language and are tested on how well they learn it. There are two phases.
+
+In Phase 1, participants are taught the names of six fruits, in quantities of singular, dual and plural. They see a picture with an alien in a spaceship, who tells them the fruit and the number. e.g. banana-SG, banana-DL or banana-PL. (See the first picture attached.) In the second picture, another alien is holding the correct number of fruits. (See the second picture attached.)
+Then the participants are tested on how well they have learned the fruit names and number suffixes. They see the picture of the alien in the spaceship saying the fruit name and quantity, and they are shown two options: the other alien with the correct quantity of fruit, and the same alien with an incorrect quantity of fruit. They have to select the correct picture.
+
+In Phase 2, participants are taught two verbs (pick-up and throw-away) and two agreement suffixes (-ke and -ko). There are two pictures again. The first shows the alien in the spaceship, now with a complex instruction: "Pick-up-SG fruit-SG", for example, or "Throw-away-PL fruit-PL". (See third picture attached.) The second picture always shows the other alien doing the correct action to the correct number of fruits. (See the fourth picture attached.)
+Crucially, the verbal suffix can be ambiguous: in the SG-DL condition, the verbal agreement suffix is identical for singular and dual quantities. Ditto for the SG-PL and DL-PL conditions.
+In the testing bit, participants see the picture of the alien in the spaceship again, issuing an instruction to his friend to pick up or throw away a certain number of fruits. But this time there is an ink blot that hides the fruit's number suffix. So the instruction is "Pick-up-ke fruit-BLOT" or "Throw-away-ko fruit-BLOT". (See the fifth picture attached.)
+Two options are given (See the last two pictures attached.) - the participants have to select the correct one. But because of the ink blot, the instruction might be ambiguous.
+
+**We want to know which of the conditions participants learn the best. We expect them to learn SG-PL and DL-PL best, with the SG-DL hardest to learn.**
+
+# Online Behavioural Data
+
+```{r}
+#| echo: false
+# Load the raw dataset
+
+## The Dataset (Pilot)
+
+## DP = Dual Plural; SD = Singular Dual ; SP = Singular Plural
+
+# Import CSV files - PROLIFIC
+DP = read.csv(file = "data/raw/pilot-N24/DP.csv", header = T)
+SD = read.csv(file = "data/raw/pilot-N24/SD.csv", header = T)
+SP = read.csv(file = "data/raw/pilot-N24/SP.csv", header = T)
+
+raw_data = rbind(DP,SD,SP)
+raw_data<- raw_data %>% rename(Condition = randomiser.3q16,
+                               Participant = Participant.Private.ID)
+```
+
+
+```{r}
+
+raw_data <- raw_data %>% filter(Screen == "Testing")
+data <- raw_data %>% select(Participant,Condition, Response, Correct)
+
+```
+
+```{r}
+results <- data %>% group_by(Condition)%>%summarise(ACC=mean(Correct)*100)
+#group_by(Item.no)%>%summarise(ACC=mean(ACC)*100
+```
+
+## Results of N=24 Pilot Participants
+
+```{r}
+ACC_p<- ggplot(results,
+             aes(x=Condition,y=ACC,fill=Condition)) +
+ 
+# geom_bar function is used to plot bars of barplot
+geom_bar(stat = "identity", width = 0.8, position = position_dodge(1) ) +
+ylab("Accuracy in %") + 
+  xlab("Conditions") +
+coord_cartesian(ylim = c(0, 70)) +
+theme_bw(base_size = 12) +
+  geom_text(aes(label = round(ACC, digits = 2)), vjust = 1.5, colour = "black")+
+scale_fill_manual(values=c("#EBBED3", "#847262", "#56B4E9"))
+# geom_signif(textsize=3,
+#    y_position = c(1050, 1100, 1200), xmin = c(1, 2, 1), xmax = c(2, 3, 3),
+#    annotation = c("<.0001 ", "<.0001","0.0755"), tip_length = 0.2
+#  ) 
+ 
+
+#geom_errorbar function is used to plot error bars
+
+
+ACC_p + theme_bw()+ theme(axis.text=element_text(size=12),
+                   axis.title=element_text(size=12,face="bold"),
+                   axis.title.x = element_blank())
+
+```
+
+`Report compiled by Swarnendu Moitra` 
