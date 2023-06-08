@@ -75,19 +75,44 @@ Two options are given (See the last two pictures attached.) - the participants h
 ## DP = Dual Plural; SD = Singular Dual ; SP = Singular Plural
 
 # Import CSV files - PROLIFIC
-DP = read.csv(file = "data/raw/pilot-N24/DP.csv", header = T)
-SD = read.csv(file = "data/raw/pilot-N24/SD.csv", header = T)
-SP = read.csv(file = "data/raw/pilot-N24/SP.csv", header = T)
+DP_raw = read.csv(file = "data/raw/EXP-NEW/DP.csv", header = T)
+DP = DP_raw %>% filter(Screen == "Testing")
+DP = DP %>% rename(CorrectAnswer = Spreadsheet..CorrectAnswer)
+DP_ref = read.csv(file = "data/raw/EXP-NEW/Dual-Plural-Ref.csv", header = T)
 
-raw_data = rbind(DP,SD,SP)
-raw_data<- raw_data %>% rename(Condition = randomiser.3q16,
+DP <- merge(x=DP,y=DP_ref,
+                     by="CorrectAnswer")
+#dp <- DP %>% select(Participant.Public.ID,Participant.Private.ID,randomiser.3q16,Reaction.Time,Correct,Condition,Critical)
+
+SD_raw = read.csv(file = "data/raw/EXP-NEW/SD.csv", header = T)
+SD = SD_raw %>% filter(Screen == "Testing")
+SD = SD %>% rename(CorrectAnswer = Spreadsheet..CorrectAnswer)
+SD_ref = read.csv(file = "data/raw/EXP-NEW/Singular-Dual-Ref.csv", header = T)
+
+SD <- merge(x=SD,y=SD_ref,by="CorrectAnswer")
+#sd <- SD %>% select(Participant.Public.ID,Participant.Private.ID,randomiser.3q16,Reaction.Time,Correct,Condition,Critical)
+
+
+SP_raw = read.csv(file = "data/raw/EXP-NEW/SP.csv", header = T)
+SP = SP_raw %>% filter(Screen == "Testing")
+SP = SP %>% rename(CorrectAnswer = Spreadsheet..CorrectAnswer)
+SP_ref = read.csv(file = "data/raw/EXP-NEW/Singular-Plural-Ref.csv", header = T)
+
+SP <- merge(x=SP,y=SP_ref,by="CorrectAnswer")
+#sp <- SP %>% select(Participant.Public.ID,Participant.Private.ID,randomiser.3q16,Reaction.Time,Correct,Condition,Critical)
+
+
+
+#raw_data = rbind(dp,sp,sd)
+raw_data = rbind(DP,SP,SD)
+raw_data<- raw_data %>% rename(Conditions = randomiser.3q16,
                                Participant = Participant.Private.ID)
 ```
 
 
 ```{r}
 
-raw_data <- raw_data %>% filter(Screen == "Testing")
+raw_data <- raw_data %>% filter(Critical == "Y")
 data <- raw_data %>% select(Participant,Condition, Response, Correct)
 
 ```
@@ -97,7 +122,7 @@ results <- data %>% group_by(Condition)%>%summarise(ACC=mean(Correct)*100)
 #group_by(Item.no)%>%summarise(ACC=mean(ACC)*100
 ```
 
-## Results of N=24 Pilot Participants
+## Results of N=134 Participants
 
 ```{r}
 ACC_p<- ggplot(results,
