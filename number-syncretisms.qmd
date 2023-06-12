@@ -137,7 +137,7 @@ resultsbyItem <- data %>% group_by(Item.no,Condition)%>%summarise(ACC=mean(Corre
 -   The study was conducted on Gorilla.sc and were recruited via Prolific.
 
 
-## Results of N=134 Participants
+## Results of `` N = `r n_distinct(unique(na.omit(data$Participant)))` `` Participants
 
 ```{r}
 ACC_p<- ggplot(results,
