@@ -75,30 +75,39 @@ Two options are given (See the last two pictures attached.) - the participants h
 ## DP = Dual Plural; SD = Singular Dual ; SP = Singular Plural
 
 # Import CSV files - PROLIFIC
-DP_raw = read.csv(file = "data/raw/EXP-NEW/DP.csv", header = T)
+DP_raw = read.csv(file = "data/raw/EXP-N148/DP.csv", header = T)
 DP = DP_raw %>% filter(Screen == "Testing")
-DP = DP %>% rename(CorrectAnswer = Spreadsheet..CorrectAnswer)
-DP_ref = read.csv(file = "data/raw/EXP-NEW/Dual-Plural-Ref.csv", header = T)
+DP = DP %>% rename(CorrectAnswer = Spreadsheet..CorrectAnswer,
+                   Test02Picture01 = Spreadsheet..Test02Picture01,
+                   Test02Option01 = Spreadsheet..Test02Option01,
+                   Test02Option02 = Spreadsheet..Test02Option02)
+DP_ref = read.csv(file = "data/raw/EXP-N148/Dual-Plural-Ref.csv", header = T)
 
 DP <- merge(x=DP,y=DP_ref,
-                     by="CorrectAnswer")
+                     by=c("CorrectAnswer","Test02Picture01","Test02Option01","Test02Option02"))
 #dp <- DP %>% select(Participant.Public.ID,Participant.Private.ID,randomiser.3q16,Reaction.Time,Correct,Condition,Critical)
 
-SD_raw = read.csv(file = "data/raw/EXP-NEW/SD.csv", header = T)
+SD_raw = read.csv(file = "data/raw/EXP-N148/SD.csv", header = T)
 SD = SD_raw %>% filter(Screen == "Testing")
-SD = SD %>% rename(CorrectAnswer = Spreadsheet..CorrectAnswer)
-SD_ref = read.csv(file = "data/raw/EXP-NEW/Singular-Dual-Ref.csv", header = T)
+SD = SD %>% rename(CorrectAnswer = Spreadsheet..CorrectAnswer,
+                   Test02Picture01 = Spreadsheet..Test02Picture01,
+                   Test02Option01 = Spreadsheet..Test02Option01,
+                   Test02Option02 = Spreadsheet..Test02Option02)
+SD_ref = read.csv(file = "data/raw/EXP-N148/Singular-Dual-Ref.csv", header = T)
 
-SD <- merge(x=SD,y=SD_ref,by="CorrectAnswer")
+SD <- merge(x=SD,y=SD_ref,by=c("CorrectAnswer","Test02Picture01","Test02Option01","Test02Option02"))
 #sd <- SD %>% select(Participant.Public.ID,Participant.Private.ID,randomiser.3q16,Reaction.Time,Correct,Condition,Critical)
 
 
-SP_raw = read.csv(file = "data/raw/EXP-NEW/SP.csv", header = T)
+SP_raw = read.csv(file = "data/raw/EXP-N148/SP.csv", header = T)
 SP = SP_raw %>% filter(Screen == "Testing")
-SP = SP %>% rename(CorrectAnswer = Spreadsheet..CorrectAnswer)
-SP_ref = read.csv(file = "data/raw/EXP-NEW/Singular-Plural-Ref.csv", header = T)
+SP = SP %>% rename(CorrectAnswer = Spreadsheet..CorrectAnswer,
+                   Test02Picture01 = Spreadsheet..Test02Picture01,
+                   Test02Option01 = Spreadsheet..Test02Option01,
+                   Test02Option02 = Spreadsheet..Test02Option02)
+SP_ref = read.csv(file = "data/raw/EXP-N148/Singular-Plural-Ref.csv", header = T)
 
-SP <- merge(x=SP,y=SP_ref,by="CorrectAnswer")
+SP <- merge(x=SP,y=SP_ref,by=c("CorrectAnswer","Test02Picture01","Test02Option01","Test02Option02"))
 #sp <- SP %>% select(Participant.Public.ID,Participant.Private.ID,randomiser.3q16,Reaction.Time,Correct,Condition,Critical)
 
 
@@ -113,14 +122,20 @@ raw_data<- raw_data %>% rename(Conditions = randomiser.3q16,
 ```{r}
 
 raw_data <- raw_data %>% filter(Critical == "Y")
-data <- raw_data %>% select(Participant,Condition, Response, Correct)
+data <- raw_data %>% select(Item.no,Participant,Condition, Response, Correct)
 
 ```
 
 ```{r}
 results <- data %>% group_by(Condition)%>%summarise(ACC=mean(Correct)*100)
+resultsbyItem <- data %>% group_by(Item.no,Condition)%>%summarise(ACC=mean(Correct)*100)
 #group_by(Item.no)%>%summarise(ACC=mean(ACC)*100
 ```
+
+-   The dataset consists of `` N = `r n_distinct(unique(na.omit(data$Participant)))` `` participants.
+-   Number of participants per condition 
+-   The study was conducted on Gorilla.sc and were recruited via Prolific.
+
 
 ## Results of N=134 Participants
 
