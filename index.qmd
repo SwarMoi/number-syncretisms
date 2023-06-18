@@ -11,9 +11,6 @@ author:
   - name: Swarnendu Moitra
     affiliations:
       - ref: qmul
-  - name: Rémy Lamarque
-    affiliations:
-      - ref: qmul
 format: 
   html:
     self-contained: true
@@ -46,6 +43,7 @@ require(palmerpenguins)
 require(taylor)
 require(plotrix)
 require(optimx)
+
 ```
 
 # Introduction
@@ -95,7 +93,8 @@ SD <- merge(x=SD,y=SD_ref,by=c("CorrectAnswer","Test02Picture01","Test02Option01
 #sd <- SD %>% select(Participant.Public.ID,Participant.Private.ID,randomiser.3q16,Reaction.Time,Correct,Condition,Critical)
 
 
-SP_raw = read.csv(file = "data/raw/EXP-N148/SP.csv", header = T)
+## Singular Plural Data was collected later 
+SP_raw = read.csv(file = "data/raw/EXP-N49-SP/SP.csv", header = T)
 SP = SP_raw %>% filter(Screen == "Testing")
 SP = SP %>% rename(CorrectAnswer = Spreadsheet..CorrectAnswer,
                    Test02Picture01 = Spreadsheet..Test02Picture01,
@@ -106,24 +105,28 @@ SP_ref = read.csv(file = "data/raw/EXP-N148/Singular-Plural-Ref.csv", header = T
 SP <- merge(x=SP,y=SP_ref,by=c("CorrectAnswer","Test02Picture01","Test02Option01","Test02Option02"))
 #sp <- SP %>% select(Participant.Public.ID,Participant.Private.ID,randomiser.3q16,Reaction.Time,Correct,Condition,Critical)
 
-
+raw_data = rbind(DP,SD)
+raw_data = raw_data %>% subset(select = -randomiser.3q16)
 
 #raw_data = rbind(dp,sp,sd)
-raw_data = rbind(DP,SP,SD)
-raw_data<- raw_data %>% rename(Conditions = randomiser.3q16,
-                               Participant = Participant.Private.ID)
+raw_data = rbind(raw_data,SP)
+raw_data<- raw_data %>% rename(Participant = Participant.Private.ID,
+                               Accuracy = Correct)
 ```
 
 ```{r}
 
 raw_data <- raw_data %>% filter(Critical == "Y")
-data <- raw_data %>% select(Item.no,Participant,Condition, Response, Correct)
+data <- raw_data %>% dplyr::select(Item.no,Participant,Condition, Response, Accuracy)
 
 ```
 
 ```{r}
-results <- data %>% group_by(Condition)%>%summarise(ACC=mean(Correct)*100)
-resultsbyItem <- data %>% group_by(Item.no,Condition)%>%summarise(ACC=mean(Correct)*100)
+results <- data %>% group_by(Condition)%>%summarise(ACC=mean(Accuracy)*100,SD_ACC = sd(Accuracy)*100,SE_ACC=std.error(Accuracy)*100)
+
+#group_by(Condition)%>%summarise(MeanACC=mean(ACC)*100, SD_ACC = sd(ACC)*100,SE_ACC=std.error(ACC)*100,MeanRT=mean(RT),SD_RT = sd(RT),SE_RT=std.error(RT))
+
+resultsbyItem <- data %>% group_by(Item.no,Condition)%>%summarise(ACC=mean(Accuracy)*100)
 #group_by(Item.no)%>%summarise(ACC=mean(ACC)*100
 ```
 
@@ -141,14 +144,14 @@ ACC_p<- ggplot(results,
 geom_bar(stat = "identity", width = 0.8, position = position_dodge(1) ) +
 ylab("Accuracy in %") + 
   xlab("Conditions") +
-coord_cartesian(ylim = c(0, 70)) +
+coord_cartesian(ylim = c(0, 80)) +
 theme_bw(base_size = 12) +
-  geom_text(aes(label = round(ACC, digits = 2)), vjust = 1.5, colour = "black")+
-scale_fill_manual(values=c("#EBBED3", "#847262", "#56B4E9"))
-# geom_signif(textsize=3,
-#    y_position = c(1050, 1100, 1200), xmin = c(1, 2, 1), xmax = c(2, 3, 3),
-#    annotation = c("<.0001 ", "<.0001","0.0755"), tip_length = 0.2
-#  ) 
+  geom_text(aes(label = round(ACC, digits = 2)), vjust = 3.5, colour = "black")+
+scale_fill_manual(values=c("#EBBED3", "#847262", "#56B4E9"))+
+geom_errorbar(aes(ymin=ACC-SE_ACC,ymax=ACC+SE_ACC),width=0.1)
+#geom_signif(textsize=3,
+#  y_position = c(1050, 1100, 1200), xmin = c(1, 2, 1), xmax = c(2, 3, 3),
+#    annotation = c("<.0001 ", "<.0001","0.0755"), tip_length = 0.2) 
  
 
 #geom_errorbar function is used to plot error bars
@@ -159,5 +162,109 @@ ACC_p + theme_bw()+ theme(axis.text=element_text(size=12),
                    axis.title.x = element_blank())
 
 ```
+
+```{r}
+#Stats
+
+ACC_data <- raw_data %>% dplyr::select(Participant, Condition, Item.no, Accuracy)
+
+ACC_DATA <- ACC_data %>% 
+  mutate(
+    Participant = as.factor(Participant),
+    Condition = as.factor(Condition),
+    Item = as.factor(Item.no)
+  )
+
+str(ACC_DATA)
+
+```
+
+
+```{r}
+ACC_model_1 <- glmer(Accuracy ~ Condition + (Condition|Participant) + (Condition|Item), family=binomial, data = ACC_DATA)
+```
+```{r}
+ACC_model_2a <- glmer(Accuracy ~ Condition + (1 + Condition|Participant) + (Condition|Item), family=binomial, data = ACC_DATA)
+```
+
+```{r}
+ACC_model_2b <- glmer(Accuracy ~ Condition + (Condition|Participant) + (1 + Condition|Item), family=binomial, data = ACC_DATA)
+```
+
+```{r}
+ACC_model_3a <- glmer(Accuracy ~ Condition + (1|Participant) + (1 + Condition|Item), family=binomial, data = ACC_DATA)
+```
+
+```{r}
+ACC_model_3b <- glmer(Accuracy ~ Condition + (1 + Condition|Participant) + (1|Item), family=binomial, data = ACC_DATA)
+```
+
+```{r}
+ACC_model_basic <- glmer(Accuracy ~ Condition + (1|Participant) + (1|Item), family=binomial, data = ACC_DATA)
+```
+
+
+```{r}
+ACC_model_vbasic <- glmer(Accuracy ~ Condition + (1|Participant), family=binomial, data = ACC_DATA)
+```
+
+```{r}
+tab_model(ACC_model_3b)
+summary(ACC_model_3b)
+```
+
+```{r}
+tab_model(ACC_model_basic)
+summary(ACC_model_basic)
+```
+```{r}
+tab_model(ACC_model_vbasic)
+summary(ACC_model_vbasic)
+```
+
+```{r}
+library(multcomp)
+library(emmeans)
+```
+
+
+```{r}
+anova(ACC_model_3a,ACC_model_3b)
+```
+
+
+```{r}
+ACC_model_3a.emm <- emmeans(ACC_model_3b, ~ Condition, lmer.df = "asymp")
+pairs(ACC_model_3a.emm, simple = "each")
+```
+
+
+```{r}
+ACC_model_3b.emm <- emmeans(ACC_model_3b, ~ Condition, lmer.df = "asymp")
+pairs(ACC_model_3b.emm, simple = "each")
+```
+
+
+```{r}
+anova(ACC_model_3b,ACC_model_basic)
+```
+
+
+```{r}
+ACC_model_3b.emm <- emmeans(ACC_model_3b, ~ Condition, lmer.df = "asymp")
+pairs(ACC_model_3b.emm, simple = "each")
+```
+
+
+```{r}
+ACC_model_basic.emm <- emmeans(ACC_model_basic, ~ Condition, lmer.df = "asymp")
+pairs(ACC_model_basic.emm, simple = "each")
+```
+
+```{r}
+ACC_model_vbasic.emm <- emmeans(ACC_model_vbasic, ~ Condition, lmer.df = "asymp")
+pairs(ACC_model_vbasic.emm, simple = "each")
+```
+
 
 `Report compiled by Swarnendu Moitra`
